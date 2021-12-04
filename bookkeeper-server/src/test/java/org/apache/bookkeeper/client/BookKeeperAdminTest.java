@@ -58,6 +58,7 @@ import org.apache.bookkeeper.conf.ClientConfiguration;
 import org.apache.bookkeeper.conf.ServerConfiguration;
 import org.apache.bookkeeper.conf.TestBKConfiguration;
 import org.apache.bookkeeper.discover.BookieServiceInfo;
+import org.apache.bookkeeper.discover.BookieState;
 import org.apache.bookkeeper.discover.RegistrationManager;
 import org.apache.bookkeeper.meta.MetadataBookieDriver;
 import org.apache.bookkeeper.meta.UnderreplicatedLedger;
@@ -191,7 +192,7 @@ public class BookKeeperAdminTest extends BookKeeperClusterTestCase {
              RegistrationManager rm = driver.createRegistrationManager()) {
             CookieValidation cookieValidation = new LegacyCookieValidation(confOfExistingBookie, rm);
             cookieValidation.checkCookies(Main.storageDirectoriesFromConf(confOfExistingBookie));
-            rm.registerBookie(bookieId, false /* readOnly */, BookieServiceInfo.EMPTY);
+            rm.registerBookie(bookieId, BookieState.Writable, BookieServiceInfo.EMPTY);
             Assert.assertFalse(
                     "initBookie shouldn't have succeeded, since bookie is still running with that configuration",
                     BookKeeperAdmin.initBookie(confOfExistingBookie));

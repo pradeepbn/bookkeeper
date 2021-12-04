@@ -32,6 +32,7 @@ import org.apache.bookkeeper.client.api.LedgerMetadata;
 import org.apache.bookkeeper.conf.AbstractConfiguration;
 import org.apache.bookkeeper.conf.ServerConfiguration;
 import org.apache.bookkeeper.discover.BookieServiceInfo;
+import org.apache.bookkeeper.discover.BookieState;
 import org.apache.bookkeeper.discover.RegistrationManager;
 import org.apache.bookkeeper.net.BookieId;
 import org.apache.bookkeeper.proto.BookkeeperInternalCallbacks.GenericCallback;
@@ -172,7 +173,7 @@ public class NullMetadataBookieDriver implements MetadataBookieDriver {
         }
 
         @Override
-        public void registerBookie(BookieId bookieId, boolean readOnly, BookieServiceInfo bookieService) {}
+        public void registerBookie(BookieId bookieId, BookieState state, BookieServiceInfo bookieService) {}
 
         @Override
         public void unregisterBookie(BookieId bookieId, boolean readOnly) {}

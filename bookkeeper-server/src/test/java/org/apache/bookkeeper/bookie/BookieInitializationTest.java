@@ -83,6 +83,7 @@ import org.apache.bookkeeper.conf.ServerConfiguration;
 import org.apache.bookkeeper.conf.TestBKConfiguration;
 import org.apache.bookkeeper.discover.BookieServiceInfo;
 import org.apache.bookkeeper.discover.BookieServiceInfo.Endpoint;
+import org.apache.bookkeeper.discover.BookieState;
 import org.apache.bookkeeper.discover.RegistrationManager;
 import org.apache.bookkeeper.http.HttpRouter;
 import org.apache.bookkeeper.http.HttpServerLoader;
@@ -291,7 +292,7 @@ public class BookieInitializationTest extends BookKeeperClusterTestCase {
         RegistrationManager rm = spy(metadataDriver.createRegistrationManager());
         doThrow(new MetadataStoreException("mocked exception"))
             .when(rm)
-            .registerBookie(any(BookieId.class), anyBoolean(), any(BookieServiceInfo.class));
+            .registerBookie(any(BookieId.class), any(BookieState.class), any(BookieServiceInfo.class));
         doReturn(rm)
             .when(metadataDriver).createRegistrationManager();
         TestBookieImpl.Resources resources = new TestBookieImpl.ResourceBuilder(conf)

@@ -40,29 +40,7 @@ import org.apache.bookkeeper.meta.LedgerManagerFactory;
 import org.apache.bookkeeper.proto.BookieServer;
 import org.apache.bookkeeper.replication.Auditor;
 import org.apache.bookkeeper.replication.AutoRecoveryMain;
-import org.apache.bookkeeper.server.http.service.AutoRecoveryStatusService;
-import org.apache.bookkeeper.server.http.service.BookieInfoService;
-import org.apache.bookkeeper.server.http.service.BookieIsReadyService;
-import org.apache.bookkeeper.server.http.service.BookieStateService;
-import org.apache.bookkeeper.server.http.service.ConfigurationService;
-import org.apache.bookkeeper.server.http.service.DecommissionService;
-import org.apache.bookkeeper.server.http.service.DeleteLedgerService;
-import org.apache.bookkeeper.server.http.service.ExpandStorageService;
-import org.apache.bookkeeper.server.http.service.GCDetailsService;
-import org.apache.bookkeeper.server.http.service.GetLastLogMarkService;
-import org.apache.bookkeeper.server.http.service.GetLedgerMetaService;
-import org.apache.bookkeeper.server.http.service.ListBookieInfoService;
-import org.apache.bookkeeper.server.http.service.ListBookiesService;
-import org.apache.bookkeeper.server.http.service.ListDiskFilesService;
-import org.apache.bookkeeper.server.http.service.ListLedgerService;
-import org.apache.bookkeeper.server.http.service.ListUnderReplicatedLedgerService;
-import org.apache.bookkeeper.server.http.service.LostBookieRecoveryDelayService;
-import org.apache.bookkeeper.server.http.service.MetricsService;
-import org.apache.bookkeeper.server.http.service.ReadLedgerEntryService;
-import org.apache.bookkeeper.server.http.service.RecoveryBookieService;
-import org.apache.bookkeeper.server.http.service.TriggerAuditService;
-import org.apache.bookkeeper.server.http.service.TriggerGCService;
-import org.apache.bookkeeper.server.http.service.WhoIsAuditorService;
+import org.apache.bookkeeper.server.http.service.*;
 import org.apache.bookkeeper.stats.StatsProvider;
 import org.apache.zookeeper.KeeperException;
 
@@ -223,6 +201,8 @@ public class BKHttpServiceProvider implements HttpServiceProvider {
                 return new BookieIsReadyService(bookieServer.getBookie());
             case BOOKIE_INFO:
                 return new BookieInfoService(bookieServer.getBookie());
+            case BOOKIE_SCALE_DOWN:
+                return new BookieScaleDownService(bookieServer.getBookie());
 
             // autorecovery
             case AUTORECOVERY_STATUS:

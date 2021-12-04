@@ -50,6 +50,7 @@ public abstract class HttpRouter<Handler> {
     public static final String BOOKIE_STATE                 = "/api/v1/bookie/state";
     public static final String BOOKIE_IS_READY              = "/api/v1/bookie/is_ready";
     public static final String BOOKIE_INFO                  = "/api/v1/bookie/info";
+    public static final String BOOKIE_SCALE_DOWN            = "/api/v1/bookie/scale_down";
     // autorecovery
     public static final String AUTORECOVERY_STATUS          = "/api/v1/autorecovery/status";
     public static final String RECOVERY_BOOKIE              = "/api/v1/autorecovery/bookie";
@@ -84,6 +85,7 @@ public abstract class HttpRouter<Handler> {
         this.endpointHandlers.put(BOOKIE_STATE, handlerFactory.newHandler(HttpServer.ApiType.BOOKIE_STATE));
         this.endpointHandlers.put(BOOKIE_IS_READY, handlerFactory.newHandler(HttpServer.ApiType.BOOKIE_IS_READY));
         this.endpointHandlers.put(BOOKIE_INFO, handlerFactory.newHandler(HttpServer.ApiType.BOOKIE_INFO));
+        this.endpointHandlers.put(BOOKIE_SCALE_DOWN, handlerFactory.newHandler(HttpServer.ApiType.BOOKIE_SCALE_DOWN));
 
         // autorecovery
         this.endpointHandlers.put(AUTORECOVERY_STATUS, handlerFactory

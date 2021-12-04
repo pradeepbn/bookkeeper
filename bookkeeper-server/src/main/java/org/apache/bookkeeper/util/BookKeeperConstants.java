@@ -32,6 +32,7 @@ public class BookKeeperConstants {
     public static final String PASSWD = "passwd";
     public static final String CURRENT_DIR = "current";
     public static final String READONLY = "readonly";
+    public static final String DRAINING = "draining";
 
     // //////////////////////////
     // ///// Znodes//////////////

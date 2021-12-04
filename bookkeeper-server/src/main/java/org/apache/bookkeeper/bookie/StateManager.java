@@ -99,6 +99,11 @@ public interface StateManager extends AutoCloseable {
     Future<Void> transitionToReadOnlyMode();
 
     /**
+     * Set the state of bookie to Draining mode during auto-scale down.
+     */
+    Future<Void> transitionToDrainingMode();
+
+    /**
      * ShutdownHandler used to shutdown bookie.
      */
     interface ShutdownHandler {

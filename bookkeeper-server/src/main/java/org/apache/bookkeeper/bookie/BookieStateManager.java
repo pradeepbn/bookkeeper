@@ -37,9 +37,12 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
+
+import lombok.extern.java.Log;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.bookkeeper.conf.ServerConfiguration;
 import org.apache.bookkeeper.discover.BookieServiceInfo;
+import org.apache.bookkeeper.discover.BookieState;
 import org.apache.bookkeeper.discover.RegistrationManager;
 import org.apache.bookkeeper.net.BookieId;
 import org.apache.bookkeeper.stats.Gauge;
@@ -264,6 +267,17 @@ public class BookieStateManager implements StateManager {
         });
     }
 
+    @Override
+    public Future<Void> transitionToDrainingMode() {
+        return stateService.submit(new Callable<Void>() {
+            @Override
+            public Void call() throws Exception {
+                doTransitionToDrainingMode();
+                return null;
+            }
+        });
+    }
+
     void doRegisterBookie() throws IOException {
         doRegisterBookie(forceReadOnly.get() || bookieStatus.isInReadOnlyMode());
     }
@@ -277,7 +291,11 @@ public class BookieStateManager implements StateManager {
 
         rmRegistered.set(false);
         try {
-            rm.registerBookie(bookieIdSupplier.get(), isReadOnly, bookieServiceInfoProvider.get());
+            if (isReadOnly) {
+                rm.registerBookie(bookieIdSupplier.get(), BookieState.ReadOnly, bookieServiceInfoProvider.get());
+            } else {
+                rm.registerBookie(bookieIdSupplier.get(), BookieState.Writable, bookieServiceInfoProvider.get());
+            }
             rmRegistered.set(true);
         } catch (BookieException e) {
             throw new IOException(e);
@@ -321,6 +339,20 @@ public class BookieStateManager implements StateManager {
     }
 
     @VisibleForTesting
+    public  void doTransitionToDrainingMode() throws IOException {
+        if (!bookieStatus.isInReadOnlyMode()) {
+            LOG.error("Bookie is not in Readonly mode, cannot be moved to the draining state");
+        }
+        LOG.info("Transitioning to draining state");
+        try {
+            rm.registerBookie(bookieIdSupplier.get(), BookieState.Draining, bookieServiceInfoProvider.get());
+        } catch (BookieException e) {
+            throw new IOException(e);
+        }
+        return;
+    }
+
+    @VisibleForTesting
     public void doTransitionToReadOnlyMode() {
         if (shuttingdown) {
             return;
@@ -347,7 +379,7 @@ public class BookieStateManager implements StateManager {
             return;
         }
         try {
-            rm.registerBookie(bookieIdSupplier.get(), true, bookieServiceInfoProvider.get());
+            rm.registerBookie(bookieIdSupplier.get(), BookieState.ReadOnly, bookieServiceInfoProvider.get());
         } catch (BookieException e) {
             LOG.error("Error in transition to ReadOnly Mode."
                     + " Shutting down", e);

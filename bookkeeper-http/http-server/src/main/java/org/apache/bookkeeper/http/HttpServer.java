@@ -36,6 +36,7 @@ public interface HttpServer {
         BAD_REQUEST(400),
         FORBIDDEN(403),
         NOT_FOUND(404),
+        METHOD_NOT_ALLOWED(405),
         INTERNAL_ERROR(500),
         SERVICE_UNAVAILABLE(503);
 
@@ -84,6 +85,7 @@ public interface HttpServer {
         BOOKIE_STATE,
         BOOKIE_IS_READY,
         BOOKIE_INFO,
+        BOOKIE_SCALE_DOWN,
 
         // autorecovery
         AUTORECOVERY_STATUS,

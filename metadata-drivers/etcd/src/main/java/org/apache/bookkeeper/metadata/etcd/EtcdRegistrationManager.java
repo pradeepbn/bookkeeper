@@ -70,6 +70,7 @@ import org.apache.bookkeeper.bookie.BookieException.BookieIllegalOpException;
 import org.apache.bookkeeper.bookie.BookieException.CookieNotFoundException;
 import org.apache.bookkeeper.bookie.BookieException.MetadataStoreException;
 import org.apache.bookkeeper.discover.BookieServiceInfo;
+import org.apache.bookkeeper.discover.BookieState;
 import org.apache.bookkeeper.discover.RegistrationManager;
 import org.apache.bookkeeper.meta.LedgerLayout;
 import org.apache.bookkeeper.net.BookieId;
@@ -147,11 +148,11 @@ class EtcdRegistrationManager implements RegistrationManager {
     }
 
     @Override
-    public void registerBookie(BookieId bookieId, boolean readOnly,
+    public void registerBookie(BookieId bookieId, BookieState state,
                                BookieServiceInfo bookieServiceInfo) throws BookieException {
-        if (readOnly) {
+        if (state == BookieState.ReadOnly) {
             doRegisterReadonlyBookie(bookieId, bkRegister.get());
-        } else {
+        } else if (state == BookieState.Writable){
             doRegisterBookie(getWritableBookiePath(scope, bookieId), bkRegister.get());
         }
     }
