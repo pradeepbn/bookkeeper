@@ -202,7 +202,7 @@ public class BKHttpServiceProvider implements HttpServiceProvider {
             case BOOKIE_INFO:
                 return new BookieInfoService(bookieServer.getBookie());
             case BOOKIE_SCALE_DOWN:
-                return new BookieScaleDownService(bookieServer.getBookie());
+                return new BookieScaleDownService(bookieServer.getBookie(), ledgerManagerFactory);
 
             // autorecovery
             case AUTORECOVERY_STATUS:
