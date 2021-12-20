@@ -183,6 +183,12 @@ public class NullMetadataBookieDriver implements MetadataBookieDriver {
         }
 
         @Override
+        public boolean isBookieRegisteredReadonly(BookieId bookieId) {return false;}
+
+        @Override
+        public boolean isBookieRegisteredReadWrite(BookieId bookieId) {return false;}
+
+        @Override
         public void writeCookie(BookieId bookieId, Versioned<byte[]> cookieData) throws BookieException {
 
         }

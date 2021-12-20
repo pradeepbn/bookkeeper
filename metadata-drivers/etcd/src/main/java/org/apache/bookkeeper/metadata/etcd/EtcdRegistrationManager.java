@@ -308,6 +308,25 @@ class EtcdRegistrationManager implements RegistrationManager {
     }
 
     @Override
+    public boolean isBookieRegisteredReadonly(BookieId bookieId) throws BookieException {
+        CompletableFuture<GetResponse> getReadonlyFuture = kvClient.get(
+                ByteSequence.from(getReadonlyBookiePath(scope, bookieId), UTF_8),
+                GetOption.newBuilder()
+                        .withCountOnly(true)
+                        .build());
+        return msResult(getReadonlyFuture).getCount() > 0;
+    }
+
+    @Override
+    public boolean isBookieRegisteredReadWrite(BookieId bookieId) throws BookieException {
+        CompletableFuture<GetResponse> getWritableFuture = kvClient.get(
+                ByteSequence.from(getWritableBookiePath(scope, bookieId), UTF_8),
+                GetOption.newBuilder()
+                        .withCountOnly(true)
+                        .build());
+        return msResult(getWritableFuture).getCount() > 0;
+    }
+
     public void writeCookie(BookieId bookieId, Versioned<byte[]> cookieData) throws BookieException {
         ByteSequence cookiePath = ByteSequence.from(getCookiePath(scope, bookieId), UTF_8);
         Txn txn = kvClient.txn();

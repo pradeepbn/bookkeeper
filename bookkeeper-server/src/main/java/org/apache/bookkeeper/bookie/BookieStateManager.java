@@ -37,6 +37,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
+
+import com.google.common.util.concurrent.UncheckedExecutionException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.bookkeeper.conf.ServerConfiguration;
 import org.apache.bookkeeper.discover.BookieServiceInfo;
@@ -228,6 +230,16 @@ public class BookieStateManager implements StateManager {
             @Override
             public Void call() throws IOException {
                 try {
+                    if (rm.isBookieRegistered(bookieIdSupplier.get())) {
+                        if (rm.isBookieRegisteredReadonly(bookieIdSupplier.get())) {
+                            LOG.info("Bookie already in Readonly mode, setting bookie state manager status to readonly");
+                            bookieStatus.setToReadOnlyMode();
+                        } else if (rm.isBookieRegisteredReadWrite(bookieIdSupplier.get())) {
+                            LOG.info("Bookie already in Read-Write mode, setting bookie state manager status to read-write");
+                            bookieStatus.setToWritableMode();
+                        }
+                        return null;
+                    }
                     doRegisterBookie();
                 } catch (IOException ioe) {
                     if (throwException) {
@@ -236,6 +248,8 @@ public class BookieStateManager implements StateManager {
                         LOG.error("Couldn't register bookie with zookeeper, shutting down : ", ioe);
                         shutdownHandler.shutdown(ExitCode.ZK_REG_FAIL);
                     }
+                }  catch (Exception e) {
+                    throw new UncheckedExecutionException(e.getMessage(), e);
                 }
                 return null;
             }
