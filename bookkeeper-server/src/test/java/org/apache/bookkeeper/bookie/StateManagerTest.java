@@ -226,10 +226,10 @@ public class StateManagerTest extends BookKeeperClusterTestCase {
 
 
     /**
-     * Verify the bookie registration if the Bookie is already readonly.
+     * Verify the bookie registration retention if the Bookie is already readonly.
      */
     @Test
-    public void testRegistrationReadOnly() throws Exception {
+    public void testRegistrationReadOnlyRetention() throws Exception {
         driver.initialize(
                 conf,
                 NullStatsLogger.INSTANCE);
@@ -239,21 +239,6 @@ public class StateManagerTest extends BookKeeperClusterTestCase {
         Mockito.doReturn(false).when(rm).isBookieRegisteredReadWrite(any(BookieId.class));
         Mockito.doReturn(true).when(rm).isBookieRegisteredReadonly(any(BookieId.class));
         BookieStateManager stateManager = new BookieStateManager(conf, rm);
-        // simulate sync shutdown logic in bookie
-        stateManager.setShutdownHandler(new StateManager.ShutdownHandler() {
-            @Override
-            public void shutdown(int code) {
-                try {
-                    if (stateManager.isRunning()) {
-                        stateManager.forceToShuttingDown();
-                        stateManager.forceToReadOnly();
-                    }
-
-                } finally {
-                    stateManager.close();
-                }
-            }
-        });
         stateManager.initState();
         // up
         assertTrue(stateManager.isRunning());
@@ -263,8 +248,38 @@ public class StateManagerTest extends BookKeeperClusterTestCase {
         stateManager.registerBookie(true).get();
         // registered
         assertTrue(stateManager.isRegistered());
-        stateManager.getShutdownHandler().shutdown(ExitCode.OK);
         // readOnly
         assertTrue(stateManager.isReadOnly());
+        //ReadWrite
+        assertFalse(stateManager.isWritable());
+    }
+
+    /**
+     * Verify the bookie registration retention if the Bookie is already read-write.
+     */
+    @Test
+    public void testRegistrationReadWriteRetention() throws Exception {
+        driver.initialize(
+                conf,
+                NullStatsLogger.INSTANCE);
+
+        RegistrationManager rm = spy(driver.createRegistrationManager());
+        Mockito.doReturn(true).when(rm).isBookieRegistered(any(BookieId.class));
+        Mockito.doReturn(true).when(rm).isBookieRegisteredReadWrite(any(BookieId.class));
+        Mockito.doReturn(false).when(rm).isBookieRegisteredReadonly(any(BookieId.class));
+        BookieStateManager stateManager = new BookieStateManager(conf, rm);
+        stateManager.initState();
+        // up
+        assertTrue(stateManager.isRunning());
+        // It is already registered
+        assertTrue(stateManager.isRegistered());
+
+        stateManager.registerBookie(true).get();
+        // registered
+        assertTrue(stateManager.isRegistered());
+        // readOnly
+        assertFalse(stateManager.isReadOnly());
+        // readWrite
+        assertTrue(stateManager.isWritable());
     }
 }

@@ -210,6 +210,11 @@ public class BookieStateManager implements StateManager {
     }
 
     @Override
+    public boolean isWritable() {
+        return bookieStatus.isInWritable();
+    }
+
+    @Override
     public boolean isAvailableForHighPriorityWrites() {
         return availableForHighPriorityWrites;
     }
