@@ -166,6 +166,7 @@ public class BookieStateManager implements StateManager {
     public void initState(){
         try {
             if (rm.isBookieRegistered(bookieIdSupplier.get())) {
+                rmRegistered.set(true);
                 if (rm.isBookieRegisteredReadonly(bookieIdSupplier.get())) {
                     LOG.info("Bookie already in Readonly mode, setting bookie state manager status to readonly");
                     bookieStatus.setToReadOnlyMode();
@@ -173,6 +174,7 @@ public class BookieStateManager implements StateManager {
                     LOG.info("Bookie already in Read-Write mode, setting bookie state manager status to read-write");
                     bookieStatus.setToWritableMode();
                 }
+                running = true;
                 return;
             }
         } catch (Exception e) {
@@ -281,6 +283,10 @@ public class BookieStateManager implements StateManager {
     }
 
     void doRegisterBookie() throws IOException {
+        if (rmRegistered.get()) {
+            LOG.info("Bookie already registered");
+            return;
+        }
         doRegisterBookie(forceReadOnly.get() || bookieStatus.isInReadOnlyMode());
     }
 
