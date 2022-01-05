@@ -254,8 +254,6 @@ public class StateManagerTest extends BookKeeperClusterTestCase {
         assertTrue(stateManager1.isRegistered());
         // readOnly state is retained
         assertTrue(stateManager1.isReadOnly());
-        // ReadWrite state is retained
-        assertFalse(stateManager1.isWritable());
         stateManager1.close();
     }
 
@@ -279,19 +277,15 @@ public class StateManagerTest extends BookKeeperClusterTestCase {
         stateManager.registerBookie(true).get();
         // Its not in the readonly state
         assertFalse(stateManager.isReadOnly());
-        // Is in read-write mode
-        assertTrue(stateManager.isWritable());
         // close state manager
         stateManager.close();
         BookieStateManager stateManager1 = new BookieStateManager(conf, rm);
         // reinit state manager
         stateManager1.initState();
-        // Bookie registeration is retained
+        // Bookie registration is retained
         assertTrue(stateManager1.isRegistered());
         // readOnly state is retained
         assertFalse(stateManager1.isReadOnly());
-        // ReadWrite state is retained
-        assertTrue(stateManager1.isWritable());
         stateManager1.close();
     }
 }
