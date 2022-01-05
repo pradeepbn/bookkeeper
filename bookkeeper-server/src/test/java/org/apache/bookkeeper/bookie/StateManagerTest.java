@@ -22,8 +22,6 @@ package org.apache.bookkeeper.bookie;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.spy;
 
 import java.io.File;
 import org.apache.bookkeeper.conf.ServerConfiguration;
@@ -31,13 +29,11 @@ import org.apache.bookkeeper.conf.TestBKConfiguration;
 import org.apache.bookkeeper.discover.RegistrationManager;
 import org.apache.bookkeeper.meta.MetadataBookieDriver;
 import org.apache.bookkeeper.meta.zk.ZKMetadataBookieDriver;
-import org.apache.bookkeeper.net.BookieId;
 import org.apache.bookkeeper.stats.NullStatsLogger;
 import org.apache.bookkeeper.test.BookKeeperClusterTestCase;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
-import org.mockito.Mockito;
 
 /**
  * Testing StateManager cases.
@@ -236,21 +232,6 @@ public class StateManagerTest extends BookKeeperClusterTestCase {
 
         RegistrationManager rm = driver.createRegistrationManager();
         BookieStateManager stateManager = new BookieStateManager(conf, rm);
-//        // simulate sync shutdown logic in bookie
-//        stateManager.setShutdownHandler(new StateManager.ShutdownHandler() {
-//            @Override
-//            public void shutdown(int code) {
-//                try {
-//                    if (stateManager.isRunning()) {
-//                        stateManager.forceToShuttingDown();
-//                        stateManager.forceToReadOnly();
-//                    }
-//
-//                } finally {
-//                    stateManager.close();
-//                }
-//            }
-//        });
         stateManager.initState();
         // up
         assertTrue(stateManager.isRunning());
@@ -289,21 +270,6 @@ public class StateManagerTest extends BookKeeperClusterTestCase {
 
         RegistrationManager rm = driver.createRegistrationManager();
         BookieStateManager stateManager = new BookieStateManager(conf, rm);
-        // simulate sync shutdown logic in bookie
-//        stateManager.setShutdownHandler(new StateManager.ShutdownHandler() {
-//            @Override
-//            public void shutdown(int code) {
-//                try {
-//                    if (stateManager.isRunning()) {
-//                        stateManager.forceToShuttingDown();
-//                        stateManager.forceToReadOnly();
-//                    }
-//
-//                } finally {
-//                    stateManager.close();
-//                }
-//            }
-//        });
         stateManager.initState();
         // up
         assertTrue(stateManager.isRunning());
