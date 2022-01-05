@@ -170,9 +170,6 @@ public class BookieStateManager implements StateManager {
                 if (rm.isBookieRegisteredReadonly(bookieIdSupplier.get())) {
                     LOG.info("Bookie already in Readonly mode, setting bookie state manager status to readonly");
                     bookieStatus.setToReadOnlyMode();
-                } else if (rm.isBookieRegisteredReadWrite(bookieIdSupplier.get())) {
-                    LOG.info("Bookie already in Read-Write mode, setting bookie state manager status to read-write");
-                    bookieStatus.setToWritableMode();
                 }
                 running = true;
                 return;
