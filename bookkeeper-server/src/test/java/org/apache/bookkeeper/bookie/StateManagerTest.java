@@ -220,4 +220,72 @@ public class StateManagerTest extends BookKeeperClusterTestCase {
         assertTrue(stateManager.isReadOnly());
     }
 
+
+    /**
+     * Verify the bookie registration retention if the Bookie is already readonly.
+     */
+    @Test
+    public void testRegistrationReadOnlyRetention() throws Exception {
+        driver.initialize(
+                conf,
+                NullStatsLogger.INSTANCE);
+
+        RegistrationManager rm = driver.createRegistrationManager();
+        BookieStateManager stateManager = new BookieStateManager(conf, rm);
+        stateManager.initState();
+        // up
+        assertTrue(stateManager.isRunning());
+        // It is not registered
+        assertFalse(stateManager.isRegistered());
+        // Register bookie
+        stateManager.registerBookie(true).get();
+        // Its not in the readonly state
+        assertFalse(stateManager.isReadOnly());
+        // Transition to readonly state
+        stateManager.transitionToReadOnlyMode().get();
+        // Is in readonly mode
+        assertTrue(stateManager.isReadOnly());
+        // close state manager
+        stateManager.close();
+        BookieStateManager stateManager1 = new BookieStateManager(conf, rm);
+        // reinit state manager
+        stateManager1.initState();
+        // Bookie registeration is retained
+        assertTrue(stateManager1.isRegistered());
+        // readOnly state is retained
+        assertTrue(stateManager1.isReadOnly());
+        stateManager1.close();
+    }
+
+    /**
+     * Verify the bookie registration retention if the Bookie is already read-write.
+     */
+    @Test
+    public void testRegistrationReadWriteRetention() throws Exception {
+        driver.initialize(
+                conf,
+                NullStatsLogger.INSTANCE);
+
+        RegistrationManager rm = driver.createRegistrationManager();
+        BookieStateManager stateManager = new BookieStateManager(conf, rm);
+        stateManager.initState();
+        // up
+        assertTrue(stateManager.isRunning());
+        // It is not registered
+        assertFalse(stateManager.isRegistered());
+        // Register bookie
+        stateManager.registerBookie(true).get();
+        // Its not in the readonly state
+        assertFalse(stateManager.isReadOnly());
+        // close state manager
+        stateManager.close();
+        BookieStateManager stateManager1 = new BookieStateManager(conf, rm);
+        // reinit state manager
+        stateManager1.initState();
+        // Bookie registration is retained
+        assertTrue(stateManager1.isRegistered());
+        // readOnly state is retained
+        assertFalse(stateManager1.isReadOnly());
+        stateManager1.close();
+    }
 }

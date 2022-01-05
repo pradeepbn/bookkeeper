@@ -48,7 +48,7 @@ public interface StateManager extends AutoCloseable {
      * Check is ReadOnly.
      */
     boolean isReadOnly();
-
+    
     /**
      * Check is Running.
      */

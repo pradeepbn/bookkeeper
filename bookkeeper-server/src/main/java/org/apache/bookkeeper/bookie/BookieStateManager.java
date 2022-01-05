@@ -26,6 +26,7 @@ import static org.apache.bookkeeper.bookie.BookKeeperServerStats.CATEGORY_SERVER
 import static org.apache.bookkeeper.bookie.BookKeeperServerStats.SERVER_STATUS;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -37,6 +38,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
+
 import lombok.extern.slf4j.Slf4j;
 import org.apache.bookkeeper.conf.ServerConfiguration;
 import org.apache.bookkeeper.discover.BookieServiceInfo;
@@ -162,6 +164,19 @@ public class BookieStateManager implements StateManager {
 
     @Override
     public void initState(){
+        try {
+            if (rm.isBookieRegistered(bookieIdSupplier.get())) {
+                rmRegistered.set(true);
+                if (rm.isBookieRegisteredReadonly(bookieIdSupplier.get())) {
+                    LOG.info("Bookie already in Readonly mode, setting bookie state manager status to readonly");
+                    bookieStatus.setToReadOnlyMode();
+                }
+                running = true;
+                return;
+            }
+        } catch (Exception e) {
+            throw new UncheckedExecutionException(e.getMessage(), e);
+        }
         if (forceReadOnly.get()) {
             this.bookieStatus.setToReadOnlyMode();
         } else if (conf.isPersistBookieStatusEnabled()) {
@@ -265,6 +280,10 @@ public class BookieStateManager implements StateManager {
     }
 
     void doRegisterBookie() throws IOException {
+        if (rmRegistered.get()) {
+            LOG.info("Bookie already registered");
+            return;
+        }
         doRegisterBookie(forceReadOnly.get() || bookieStatus.isInReadOnlyMode());
     }
 
