@@ -86,6 +86,15 @@ public interface RegistrationManager extends AutoCloseable {
     boolean isBookieRegistered(BookieId bookieId) throws BookieException;
 
     /**
+     * Checks if Bookie with the given BookieId is registered as draining
+     *
+     * @param bookieId bookie id
+     * @return returns true if a bookie with bookieid is currently registered as draining
+     * @throws BookieException
+     */
+    boolean isBookieDraining(BookieId bookieId) throws BookieException;
+
+    /**
      * Write the cookie data, which will be used for verifying the integrity of the bookie environment.
      *
      * @param bookieId bookie id

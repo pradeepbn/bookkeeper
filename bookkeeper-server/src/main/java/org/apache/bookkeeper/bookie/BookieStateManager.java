@@ -164,7 +164,16 @@ public class BookieStateManager implements StateManager {
     }
 
     @Override
-    public void initState(){
+    public void initState() {
+        try {
+            if (rm.isBookieDraining(bookieIdSupplier.get())) {
+                this.bookieStatus.setToReadOnlyMode();
+                running = true;
+                return;
+            }
+        } catch (BookieException e) {
+            // Add error log here.
+        }
         if (forceReadOnly.get()) {
             this.bookieStatus.setToReadOnlyMode();
         } else if (conf.isPersistBookieStatusEnabled()) {
