@@ -41,6 +41,7 @@ final class EtcdConstants {
     public static final String MEMBERS_NODE = "bookies";
     public static final String WRITEABLE_NODE = "writable";
     public static final String READONLY_NODE = "readonly";
+    public static final String DRAINING_NODE = "draining";
 
     //
     // underreplication related constants

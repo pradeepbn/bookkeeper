@@ -41,6 +41,7 @@ import org.apache.bookkeeper.client.api.LedgerMetadata;
 import org.apache.bookkeeper.conf.ClientConfiguration;
 import org.apache.bookkeeper.conf.ServerConfiguration;
 import org.apache.bookkeeper.discover.BookieServiceInfo;
+import org.apache.bookkeeper.discover.BookieState;
 import org.apache.bookkeeper.discover.RegistrationManager;
 import org.apache.bookkeeper.meta.LedgerManager;
 import org.apache.bookkeeper.meta.LedgerManagerFactory;
@@ -106,7 +107,7 @@ public class AuditorPlacementPolicyCheckTest extends BookKeeperClusterTestCase {
                 bookieAddress = new BookieSocketAddress("98.98.98." + i, 2181);
                 StaticDNSResolver.addNodeToRack(bookieAddress.getHostName(), "/rack" + (i));
                 bookieAddresses.add(bookieAddress.toBookieId());
-                regManager.registerBookie(bookieAddress.toBookieId(), false, BookieServiceInfo.EMPTY);
+                regManager.registerBookie(bookieAddress.toBookieId(), BookieState.Writable, BookieServiceInfo.EMPTY);
             }
         }
 
@@ -219,7 +220,7 @@ public class AuditorPlacementPolicyCheckTest extends BookKeeperClusterTestCase {
             for (int i = 0; i < numOfBookies; i++) {
                 BookieId bookieAddress = new BookieSocketAddress("98.98.98." + i, 2181).toBookieId();
                 bookieAddresses.add(bookieAddress);
-                regManager.registerBookie(bookieAddress, false, BookieServiceInfo.EMPTY);
+                regManager.registerBookie(bookieAddress, BookieState.Writable, BookieServiceInfo.EMPTY);
             }
         }
 
@@ -316,7 +317,7 @@ public class AuditorPlacementPolicyCheckTest extends BookKeeperClusterTestCase {
             for (int i = 0; i < numOfBookies; i++) {
                 BookieId bookieAddress = new BookieSocketAddress("98.98.98." + i, 2181).toBookieId();
                 bookieAddresses.add(bookieAddress);
-                regManager.registerBookie(bookieAddress, false, BookieServiceInfo.EMPTY);
+                regManager.registerBookie(bookieAddress, BookieState.Writable, BookieServiceInfo.EMPTY);
             }
         }
 
@@ -435,7 +436,7 @@ public class AuditorPlacementPolicyCheckTest extends BookKeeperClusterTestCase {
             for (int i = 0; i < numOfBookies; i++) {
                 BookieId bookieAddress = new BookieSocketAddress("98.98.98." + i, 2181).toBookieId();
                 bookieAddresses.add(bookieAddress);
-                regManager.registerBookie(bookieAddress, false, BookieServiceInfo.EMPTY);
+                regManager.registerBookie(bookieAddress, BookieState.Writable, BookieServiceInfo.EMPTY);
             }
         }
 
@@ -543,7 +544,7 @@ public class AuditorPlacementPolicyCheckTest extends BookKeeperClusterTestCase {
             for (int i = 0; i < numOfBookies; i++) {
                 BookieSocketAddress bookieAddress = new BookieSocketAddress("98.98.98." + i, 2181);
                 bookieAddresses.add(bookieAddress.toBookieId());
-                regManager.registerBookie(bookieAddress.toBookieId(), false, BookieServiceInfo.EMPTY);
+                regManager.registerBookie(bookieAddress.toBookieId(), BookieState.Writable, BookieServiceInfo.EMPTY);
                 String zone = "/zone" + (i % 3);
                 String upgradeDomain = "/ud" + (i % 2);
                 String networkLocation = zone + upgradeDomain;

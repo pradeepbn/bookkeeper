@@ -19,14 +19,12 @@
 package org.apache.bookkeeper.discover;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.apache.bookkeeper.util.BookKeeperConstants.AVAILABLE_NODE;
-import static org.apache.bookkeeper.util.BookKeeperConstants.COOKIE_NODE;
-import static org.apache.bookkeeper.util.BookKeeperConstants.EMPTY_BYTE_ARRAY;
-import static org.apache.bookkeeper.util.BookKeeperConstants.INSTANCEID;
-import static org.apache.bookkeeper.util.BookKeeperConstants.READONLY;
+import static org.apache.bookkeeper.util.BookKeeperConstants.*;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+
+import java.awt.print.Book;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -108,6 +106,7 @@ public class ZKRegistrationManager implements RegistrationManager {
     // registration paths
     protected final String bookieRegistrationPath;
     protected final String bookieReadonlyRegistrationPath;
+    protected final String bookieDrainingRegistrationPath;
     // session timeout in milliseconds
     private final int zkTimeoutMs;
     private final List<RegistrationListener> listeners = new ArrayList<>();
@@ -127,6 +126,7 @@ public class ZKRegistrationManager implements RegistrationManager {
         this.cookiePath = ledgersRootPath + "/" + COOKIE_NODE;
         this.bookieRegistrationPath = ledgersRootPath + "/" + AVAILABLE_NODE;
         this.bookieReadonlyRegistrationPath = this.bookieRegistrationPath + "/" + READONLY;
+        this.bookieDrainingRegistrationPath = this.bookieRegistrationPath + "/" + DRAINING;
         this.zkTimeoutMs = conf.getZkTimeout();
 
         this.layoutManager = new ZkLayoutManager(
@@ -217,13 +217,15 @@ public class ZKRegistrationManager implements RegistrationManager {
     }
 
     @Override
-    public void registerBookie(BookieId bookieId, boolean readOnly,
+    public void registerBookie(BookieId bookieId, BookieState state,
                                BookieServiceInfo bookieServiceInfo) throws BookieException {
-        if (!readOnly) {
+        if (state == BookieState.Writable) {
             String regPath = bookieRegistrationPath + "/" + bookieId;
-            doRegisterBookie(regPath, bookieServiceInfo);
-        } else {
+            doRegisterBookie(regPath, bookieServiceInfo, false);
+        } else if (state == BookieState.ReadOnly) {
             doRegisterReadOnlyBookie(bookieId, bookieServiceInfo);
+        } else if (state == BookieState.Draining) {
+            doRegisterDrainingBookie(bookieId, bookieServiceInfo);
         }
     }
 
@@ -258,12 +260,16 @@ public class ZKRegistrationManager implements RegistrationManager {
         }
     }
 
-    private void doRegisterBookie(String regPath, BookieServiceInfo bookieServiceInfo) throws BookieException {
+    private void doRegisterBookie(String regPath, BookieServiceInfo bookieServiceInfo, boolean persistent) throws BookieException {
         // ZK ephemeral node for this Bookie.
         try {
             if (!checkRegNodeAndWaitExpired(regPath)) {
                 // Create the ZK ephemeral node for this Bookie.
-                zk.create(regPath, serializeBookieServiceInfo(bookieServiceInfo), zkAcls, CreateMode.EPHEMERAL);
+                if (!persistent) {
+                    zk.create(regPath, serializeBookieServiceInfo(bookieServiceInfo), zkAcls, CreateMode.EPHEMERAL);
+                } else {
+                    zk.create(regPath, serializeBookieServiceInfo(bookieServiceInfo), zkAcls, CreateMode.PERSISTENT);
+                }
                 zkRegManagerInitialized = true;
             }
         } catch (KeeperException ke) {
@@ -297,7 +303,7 @@ public class ZKRegistrationManager implements RegistrationManager {
             }
 
             String regPath = bookieReadonlyRegistrationPath + "/" + bookieId;
-            doRegisterBookie(regPath, bookieServiceInfo);
+            doRegisterBookie(regPath, bookieServiceInfo, false);
             // clear the write state
             regPath = bookieRegistrationPath + "/" + bookieId;
             try {
@@ -307,6 +313,24 @@ public class ZKRegistrationManager implements RegistrationManager {
                 log.warn("No writable bookie registered node {} when transitioning to readonly",
                     regPath, nne);
             }
+        } catch (KeeperException | InterruptedException e) {
+            throw new MetadataStoreException(e);
+        }
+    }
+
+    private void doRegisterDrainingBookie(BookieId bookieId, BookieServiceInfo bookieServiceInfo)
+            throws BookieException {
+        try {
+            if (zk.exists(this.bookieDrainingRegistrationPath, false) == null) {
+                try {
+                    zk.create(this.bookieDrainingRegistrationPath, serializeBookieServiceInfo(bookieServiceInfo),
+                            zkAcls, CreateMode.PERSISTENT);
+                } catch (NodeExistsException e) {
+                    // this node is just now created by someone.
+                }
+            }
+            String regPath = bookieDrainingRegistrationPath + "/" + bookieId;
+            doRegisterBookie(regPath, bookieServiceInfo, true);
         } catch (KeeperException | InterruptedException e) {
             throw new MetadataStoreException(e);
         }
@@ -600,6 +624,22 @@ public class ZKRegistrationManager implements RegistrationManager {
         String readonlyRegPath = bookieReadonlyRegistrationPath + "/" + bookieId;
         try {
             return ((null != zk.exists(regPath, false)) || (null != zk.exists(readonlyRegPath, false)));
+        } catch (KeeperException e) {
+            log.error("ZK exception while checking registration ephemeral znodes for BookieId: {}", bookieId, e);
+            throw new MetadataStoreException(e);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.error("InterruptedException while checking registration ephemeral znodes for BookieId: {}", bookieId,
+                    e);
+            throw new MetadataStoreException(e);
+        }
+    }
+
+    @Override
+    public boolean isBookieDraining(BookieId bookieId) throws BookieException {
+        String drainingPath = bookieDrainingRegistrationPath + "/" + bookieId;
+        try {
+            return (null != zk.exists(drainingPath, false));
         } catch (KeeperException e) {
             log.error("ZK exception while checking registration ephemeral znodes for BookieId: {}", bookieId, e);
             throw new MetadataStoreException(e);

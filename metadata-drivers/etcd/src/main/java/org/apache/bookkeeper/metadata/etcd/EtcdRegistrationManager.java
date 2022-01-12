@@ -19,21 +19,7 @@
 package org.apache.bookkeeper.metadata.etcd;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.apache.bookkeeper.metadata.etcd.EtcdUtils.getBookiesEndPath;
-import static org.apache.bookkeeper.metadata.etcd.EtcdUtils.getBookiesPath;
-import static org.apache.bookkeeper.metadata.etcd.EtcdUtils.getBucketsPath;
-import static org.apache.bookkeeper.metadata.etcd.EtcdUtils.getClusterInstanceIdPath;
-import static org.apache.bookkeeper.metadata.etcd.EtcdUtils.getCookiePath;
-import static org.apache.bookkeeper.metadata.etcd.EtcdUtils.getCookiesPath;
-import static org.apache.bookkeeper.metadata.etcd.EtcdUtils.getLayoutKey;
-import static org.apache.bookkeeper.metadata.etcd.EtcdUtils.getLedgersPath;
-import static org.apache.bookkeeper.metadata.etcd.EtcdUtils.getReadonlyBookiePath;
-import static org.apache.bookkeeper.metadata.etcd.EtcdUtils.getReadonlyBookiesPath;
-import static org.apache.bookkeeper.metadata.etcd.EtcdUtils.getScopeEndKey;
-import static org.apache.bookkeeper.metadata.etcd.EtcdUtils.getUnderreplicationPath;
-import static org.apache.bookkeeper.metadata.etcd.EtcdUtils.getWritableBookiePath;
-import static org.apache.bookkeeper.metadata.etcd.EtcdUtils.getWritableBookiesPath;
-import static org.apache.bookkeeper.metadata.etcd.EtcdUtils.msResult;
+import static org.apache.bookkeeper.metadata.etcd.EtcdUtils.*;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.UncheckedExecutionException;
@@ -70,6 +56,7 @@ import org.apache.bookkeeper.bookie.BookieException.BookieIllegalOpException;
 import org.apache.bookkeeper.bookie.BookieException.CookieNotFoundException;
 import org.apache.bookkeeper.bookie.BookieException.MetadataStoreException;
 import org.apache.bookkeeper.discover.BookieServiceInfo;
+import org.apache.bookkeeper.discover.BookieState;
 import org.apache.bookkeeper.discover.RegistrationManager;
 import org.apache.bookkeeper.meta.LedgerLayout;
 import org.apache.bookkeeper.net.BookieId;
@@ -147,11 +134,11 @@ class EtcdRegistrationManager implements RegistrationManager {
     }
 
     @Override
-    public void registerBookie(BookieId bookieId, boolean readOnly,
+    public void registerBookie(BookieId bookieId, BookieState state,
                                BookieServiceInfo bookieServiceInfo) throws BookieException {
-        if (readOnly) {
+        if (state == BookieState.ReadOnly) {
             doRegisterReadonlyBookie(bookieId, bkRegister.get());
-        } else {
+        } else if (state == BookieState.Writable){
             doRegisterBookie(getWritableBookiePath(scope, bookieId), bkRegister.get());
         }
     }
@@ -292,19 +279,30 @@ class EtcdRegistrationManager implements RegistrationManager {
 
     @Override
     public boolean isBookieRegistered(BookieId bookieId) throws BookieException {
-        CompletableFuture<GetResponse> getWritableFuture = kvClient.get(
-            ByteSequence.from(getWritableBookiePath(scope, bookieId), UTF_8),
-            GetOption.newBuilder()
-                .withCountOnly(true)
-                .build());
-        CompletableFuture<GetResponse> getReadonlyFuture = kvClient.get(
-            ByteSequence.from(getReadonlyBookiePath(scope, bookieId), UTF_8),
+        CompletableFuture<GetResponse> getDrainingFuture = kvClient.get(
+            ByteSequence.from(getDrainingBookiePath(scope, bookieId), UTF_8),
             GetOption.newBuilder()
                 .withCountOnly(true)
                 .build());
 
+        return msResult(getDrainingFuture).getCount() > 0;
+    }
+
+    @Override
+    public boolean isBookieDraining(BookieId bookieId) throws BookieException {
+        CompletableFuture<GetResponse> getWritableFuture = kvClient.get(
+                ByteSequence.from(getWritableBookiePath(scope, bookieId), UTF_8),
+                GetOption.newBuilder()
+                        .withCountOnly(true)
+                        .build());
+        CompletableFuture<GetResponse> getReadonlyFuture = kvClient.get(
+                ByteSequence.from(getReadonlyBookiePath(scope, bookieId), UTF_8),
+                GetOption.newBuilder()
+                        .withCountOnly(true)
+                        .build());
+
         return msResult(getWritableFuture).getCount() > 0
-            || msResult(getReadonlyFuture).getCount() > 0;
+                || msResult(getReadonlyFuture).getCount() > 0;
     }
 
     @Override

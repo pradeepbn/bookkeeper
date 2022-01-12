@@ -59,11 +59,11 @@ public interface RegistrationManager extends AutoCloseable {
      * Registering the bookie server as <i>bookieId</i>.
      *
      * @param bookieId bookie id
-     * @param readOnly whether to register it as writable or readonly
+     * @param state register it as readonly, writable or draining state
      * @param serviceInfo information about services exposed by the Bookie
      * @throws BookieException when fail to register a bookie.
      */
-    void registerBookie(BookieId bookieId, boolean readOnly, BookieServiceInfo serviceInfo) throws BookieException;
+    void registerBookie(BookieId bookieId, BookieState state, BookieServiceInfo serviceInfo) throws BookieException;
 
     /**
      * Unregistering the bookie server as <i>bookieId</i>.
@@ -84,6 +84,15 @@ public interface RegistrationManager extends AutoCloseable {
      * @throws BookieException
      */
     boolean isBookieRegistered(BookieId bookieId) throws BookieException;
+
+    /**
+     * Checks if Bookie with the given BookieId is registered as draining
+     *
+     * @param bookieId bookie id
+     * @return returns true if a bookie with bookieid is currently registered as draining
+     * @throws BookieException
+     */
+    boolean isBookieDraining(BookieId bookieId) throws BookieException;
 
     /**
      * Write the cookie data, which will be used for verifying the integrity of the bookie environment.

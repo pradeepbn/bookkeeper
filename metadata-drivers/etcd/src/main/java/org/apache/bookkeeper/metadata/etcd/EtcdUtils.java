@@ -18,17 +18,6 @@
  */
 package org.apache.bookkeeper.metadata.etcd;
 
-import static org.apache.bookkeeper.metadata.etcd.EtcdConstants.BUCKETS_NODE;
-import static org.apache.bookkeeper.metadata.etcd.EtcdConstants.COOKIES_NODE;
-import static org.apache.bookkeeper.metadata.etcd.EtcdConstants.END_SEP;
-import static org.apache.bookkeeper.metadata.etcd.EtcdConstants.INSTANCEID_NODE;
-import static org.apache.bookkeeper.metadata.etcd.EtcdConstants.LAYOUT_NODE;
-import static org.apache.bookkeeper.metadata.etcd.EtcdConstants.LEDGERS_NODE;
-import static org.apache.bookkeeper.metadata.etcd.EtcdConstants.MEMBERS_NODE;
-import static org.apache.bookkeeper.metadata.etcd.EtcdConstants.READONLY_NODE;
-import static org.apache.bookkeeper.metadata.etcd.EtcdConstants.UR_NODE;
-import static org.apache.bookkeeper.metadata.etcd.EtcdConstants.WRITEABLE_NODE;
-
 import java.io.IOException;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -40,6 +29,8 @@ import org.apache.bookkeeper.bookie.BookieException.MetadataStoreException;
 import org.apache.bookkeeper.common.concurrent.FutureUtils;
 import org.apache.bookkeeper.net.BookieId;
 import org.apache.commons.lang3.StringUtils;
+
+import static org.apache.bookkeeper.metadata.etcd.EtcdConstants.*;
 
 /**
  * Utils for etcd based metadata store.
@@ -124,6 +115,11 @@ final class EtcdUtils {
     static String getReadonlyBookiePath(String scope, BookieId bookieId) {
         return String.format("%s/%s/%s/%s",
             scope, MEMBERS_NODE, READONLY_NODE, bookieId.toString());
+    }
+
+    static String getDrainingBookiePath(String scope, BookieId bookieId) {
+        return String.format("%s/%s/%s/%s",
+                scope, MEMBERS_NODE, DRAINING_NODE, bookieId.toString());
     }
 
     static String getCookiesPath(String scope) {
