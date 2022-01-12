@@ -342,6 +342,7 @@ public class BookieStateManager implements StateManager {
     public  void doTransitionToDrainingMode() throws IOException {
         if (!bookieStatus.isInReadOnlyMode()) {
             LOG.error("Bookie is not in Readonly mode, cannot be moved to the draining state");
+            return;
         }
         LOG.info("Transitioning to draining state");
         try {
